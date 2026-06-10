@@ -17,9 +17,14 @@ const default_GRID = {
 export const shader_RD = (GRID, PARAM) => s => {
 
   let frames = 0;
+  let totalChemA = 0, totalChemB = 0;
   const MAX_SIM_FRAMES = 800;
   let rdShader;
   let bufferA, bufferB;
+
+  s.hasStopped = () => (frames >= MAX_SIM_FRAMES);
+  s.getChemATotal = () => totalChemA;
+  s.getChemBTotal = () => totalChemB;
 
   s.preload = () =>{
     rdShader = s.loadShader('./shader.vert','./shader.frag');
@@ -30,7 +35,7 @@ export const shader_RD = (GRID, PARAM) => s => {
     s.noStroke();
 
     s.fill(0, 255, 0);       
-    s.rect(-20, -20, 20, 20); // WebGL (0,0) is dead center
+    s.rect(-11, -11, 10, 10); // WebGL (0,0) is dead center
 
     // s.fill(255, 0, 0);       
     // s.circle(0, 0, 110); // WebGL (0,0) is dead center
@@ -40,10 +45,11 @@ export const shader_RD = (GRID, PARAM) => s => {
   s.setup = () => {
     s.createCanvas(GRID.ACTUAL_W, GRID.ACTUAL_H, s.WEBGL); 
     s.pixelDensity(1);
+    s.frameRate(30)
 
 
-    bufferA = s.createFramebuffer({ width: GRID.SIM_W, height: GRID.SIM_H, format: s.FLOAT, textureFiltering: s.LINEAR });
-    bufferB = s.createFramebuffer({ width: GRID.SIM_W, height: GRID.SIM_H, format: s.FLOAT, textureFiltering: s.LINEAR });
+    bufferA = s.createFramebuffer({ width: GRID.SIM_W, height: GRID.SIM_H, format: s.FLOAT, textureFiltering: s.NEAREST });
+    bufferB = s.createFramebuffer({ width: GRID.SIM_W, height: GRID.SIM_H, format: s.FLOAT, textureFiltering: s.NEAREST });
 
     bufferA.begin();
     seed();
@@ -59,8 +65,8 @@ export const shader_RD = (GRID, PARAM) => s => {
 
   s.draw = () => {
     if(frames++ >= MAX_SIM_FRAMES) return;
-    if(s.frameCount % 4 !==0)
-    for(let calc = 0; calc<80;calc++){
+    // if(s.frameCount % 8 !==0)
+    for(let calc = 0; calc<32;calc++){
        bufferA.begin()
        s.shader(rdShader);
 
@@ -78,7 +84,14 @@ export const shader_RD = (GRID, PARAM) => s => {
      }
 
 
+    bufferB.loadPixels();
+    for(let i = 0; i < bufferB.pixels.length;  i+=4){
+      totalChemA += bufferB.pixels[i];
+      totalChemB += bufferB.pixels[i+1];
+    }
+    // console.log(totalChemA , totalChemB);
     const final = bufferB;
+
     s.background(0)
     s.image(final, -GRID.ACTUAL_W/2, -GRID.ACTUAL_H/2, GRID.ACTUAL_W, GRID.ACTUAL_H);
   }

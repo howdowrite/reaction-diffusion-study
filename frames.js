@@ -1,5 +1,6 @@
 import {RD} from "./RD.js";
 import {shader_RD} from "./shader_RD.js";
+import {pop_graph} from "./pop_graph.js";
 
 const default_GRID = {
   SIM_W: 100.00,
@@ -9,10 +10,17 @@ const default_GRID = {
 }
 
 const LARGE = {
-  SIM_W: 400.00,
-  SIM_H: 400.00,
+  SIM_W: 280.00,
+  SIM_H: 280.00,
   ACTUAL_W: 800.00,
   ACTUAL_H: 800.00
+}
+
+const _1024 = {
+  SIM_W: 256.00,
+  SIM_H: 280.00,
+  ACTUAL_W: 1024.00,
+  ACTUAL_H: 1024.00
 }
 
 const SIM = {
@@ -55,5 +63,14 @@ const sampleSimulationParameters = {
 //   return originalGetContext.call(this, type, attributes);
 // };
 
-new p5(RD(default_GRID, cheetah),"RDFrame");
-new p5(shader_RD(LARGE, cheetah),"SHADER_RDFrame");
+const RD1 = new p5(shader_RD(LARGE, cheetah),"RDFrame");
+const graph = new p5(pop_graph(()=>RD1.getChemATotal(), ()=>RD1.getChemBTotal()),"RDFrame");
+// const graph = setInterval(()=>{
+//   console.log(~~RD1.getChemATotal(), ~~RD1.getChemBTotal());
+//   if(RD1.hasStopped()) {
+//     clearInterval(graph);
+//     console.log("~~Simulaton has stopped~~");
+//     return;
+//   }
+// }, 1000);
+// new p5(shader_RD(LARGE, sampleSimulationParameters),"SHADER_RDFrame");
