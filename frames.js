@@ -1,10 +1,18 @@
 import {RD} from "./RD.js";
+import {shader_RD} from "./shader_RD.js";
 
 const default_GRID = {
-  SIM_W: 400,
-  SIM_H: 400,
-  ACTUAL_W: 800,
-  ACTUAL_H:800
+  SIM_W: 400.00,
+  SIM_H: 400.00,
+  ACTUAL_W: 800.00,
+  ACTUAL_H:800.00
+}
+
+const LARGE = {
+  SIM_W: 600.00,
+  SIM_H: 600.00,
+  ACTUAL_W: 800.00,
+  ACTUAL_H:800.00
 }
 
 const default_SIM_PARAM = {
@@ -38,3 +46,4 @@ const sampleSimulationParameters = {
 // };
 
 new p5(RD(default_GRID, sampleSimulationParameters),"RDFrame");
+new p5(shader_RD(LARGE, sampleSimulationParameters),"SHADER_RDFrame");
