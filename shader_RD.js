@@ -16,9 +16,10 @@ const default_GRID = {
 //@ts-ignore
 export const shader_RD = (GRID, PARAM) => s => {
 
+  let frames = 0;
+  const MAX_SIM_FRAMES = 800;
   let rdShader;
   let bufferA, bufferB;
-  let isSwapped = false;
 
   s.preload = () =>{
     rdShader = s.loadShader('./shader.vert','./shader.frag');
@@ -37,10 +38,12 @@ export const shader_RD = (GRID, PARAM) => s => {
   }
 
   s.setup = () => {
-    s.createCanvas(600, 600, s.WEBGL); 
+    s.createCanvas(GRID.ACTUAL_W, GRID.ACTUAL_H, s.WEBGL); 
+    s.pixelDensity(1);
 
-    bufferA = s.createFramebuffer({ width: GRID.SIM_W, height: GRID.SIM_H, format: s.FLOAT, textureFiltering: s.NEAREST });
-    bufferB = s.createFramebuffer({ width: GRID.SIM_W, height: GRID.SIM_H, format: s.FLOAT, textureFiltering: s.NEAREST });
+
+    bufferA = s.createFramebuffer({ width: GRID.SIM_W, height: GRID.SIM_H, format: s.FLOAT, textureFiltering: s.LINEAR });
+    bufferB = s.createFramebuffer({ width: GRID.SIM_W, height: GRID.SIM_H, format: s.FLOAT, textureFiltering: s.LINEAR });
 
     bufferA.begin();
     seed();
@@ -55,30 +58,28 @@ export const shader_RD = (GRID, PARAM) => s => {
 
 
   s.draw = () => {
-    for(let x = 0; x<8;x++){
-      let reader = isSwapped ? bufferB : bufferA;
-      let writer = isSwapped ? bufferA : bufferB;
+    if(frames++ >= MAX_SIM_FRAMES) return;
+    if(s.frameCount % 4 !==0)
+    for(let calc = 0; calc<80;calc++){
+       bufferA.begin()
+       s.shader(rdShader);
 
-      writer.begin();
-      s.shader(rdShader);
-      rdShader.setUniform('uResolution', [GRID.SIM_W, GRID.SIM_H]);
-      rdShader.setUniform('dA', PARAM.dA);
-      rdShader.setUniform('dB', PARAM.dB);
-      rdShader.setUniform('kill', PARAM.killRate);
-      rdShader.setUniform('feed', PARAM.feedRate);
-      rdShader.setUniform('uTexture', reader);
+       rdShader.setUniform('uTexture', bufferB);
+       rdShader.setUniform('uResolution', [GRID.SIM_W, GRID.SIM_H]);
+       rdShader.setUniform('dA', PARAM.dA);
+       rdShader.setUniform('dB', PARAM.dB);
+       rdShader.setUniform('kill', PARAM.killRate);
+       rdShader.setUniform('feed', PARAM.feedRate);
 
-      s.rect(-GRID.SIM_W/2, -GRID.SIM_H/2, GRID.SIM_W, GRID.SIM_H);
-      writer.end();
+       s.rect(-GRID.SIM_W/2, -GRID.SIM_H/2, GRID.SIM_W, GRID.SIM_H);
+       bufferA.end();
 
-      isSwapped = !isSwapped;
-    }
+       [bufferA, bufferB] = [bufferB, bufferA];
+     }
 
 
-    if(s.frameCount % 12 === 0){
-      const final = isSwapped ? bufferB : bufferA;
-      s.background(0)
-      s.image(final, -GRID.ACTUAL_W/2, -GRID.ACTUAL_H/2, GRID.ACTUAL_W, GRID.ACTUAL_H);
-    }
+    const final = bufferB;
+    s.background(0)
+    s.image(final, -GRID.ACTUAL_W/2, -GRID.ACTUAL_H/2, GRID.ACTUAL_W, GRID.ACTUAL_H);
   }
 }

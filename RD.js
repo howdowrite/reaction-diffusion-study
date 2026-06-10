@@ -54,7 +54,7 @@ export const RD = (GRID, PARAM) => s => {
   };
 
   s.draw = () => {
-    for(let calc = 0; calc < 8; calc++){
+    for(let calc = 0; calc < 20; calc++){
       for(let y = 1; y < GRID.SIM_H - 1; y++){
         const row = y * GRID.SIM_W;
         for(let x = 1; x < GRID.SIM_W - 1; x++){
@@ -90,7 +90,7 @@ export const RD = (GRID, PARAM) => s => {
       [nextB,gridB] = [gridB, nextB];
     }
 
-    if(s.frameCount % 8 === 0){
+    if(s.frameCount % 2 === 0){
       buffer.loadPixels();
       for(let y = 1; y<GRID.SIM_H-1; y++){
         const row = (y*GRID.SIM_W)

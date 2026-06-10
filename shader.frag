@@ -1,4 +1,4 @@
-precision highp float;
+precision mediump float;
 varying vec2 vTexCoord;
 
 uniform sampler2D uTexture;
@@ -38,5 +38,5 @@ void main() {
     float newB = c.g + (dB * lap.g) + reaction - ((kill + feed) * c.g);
     
     // 4. Output values clamped to valid 0.0-1.0 ranges back into the texture channel
-    gl_FragColor = vec4(clamp(newA, 0.0, 1.0), clamp(newB, 0.0, 1.0), 0.0, 1.0);
+    gl_FragColor = vec4(clamp(newA, 0.0, 1.0), clamp(newB, 0.0001, 1.0), 0.0, 1.0);
 }
