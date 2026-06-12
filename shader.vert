@@ -2,6 +2,8 @@ precision highp float;
 attribute vec3 aPosition;
 attribute vec2 aTexCoord;
 varying vec2 vTexCoord;
+// uniform mat4 uProjectionMatrix;   // p5 provides this automatically
+// uniform mat4 uModelViewMatrix;    // p5 provides this too
 
 void main(){
   vTexCoord = aTexCoord;

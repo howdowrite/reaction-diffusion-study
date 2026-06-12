@@ -16,13 +16,13 @@ const default_GRID = {
 //@ts-ignore
 export const RD = (GRID, PARAM) => s => {
 
-  let fpsText;
 
   //@ts-ignore
   let gridA, gridB, nextA, nextB, buffer;
+  const MAX_SIM_FRAMES = 800;
 
   s.setup = () => {
-    fpsText = s.createP("FPS: 0")
+    console.log(GRID);
     s.createCanvas(GRID.ACTUAL_W, GRID.ACTUAL_H);
     buffer = s.createGraphics(GRID.SIM_W, GRID.SIM_H);
     buffer.elt.getContext('2d')
@@ -54,7 +54,9 @@ export const RD = (GRID, PARAM) => s => {
   };
 
   s.draw = () => {
-    for(let calc = 0; calc < 20; calc++){
+
+    if(!(frames++ >= MAX_SIM_FRAMES))
+    for(let calc = 0; calc < 80; calc++){
       for(let y = 1; y < GRID.SIM_H - 1; y++){
         const row = y * GRID.SIM_W;
         for(let x = 1; x < GRID.SIM_W - 1; x++){
@@ -104,8 +106,12 @@ export const RD = (GRID, PARAM) => s => {
           buffer.pixels[pix + 3] = 255;
       }
     }
+      s.textSize(GRID.ACTUAL_H * 0.05);
+      s.fill(0)
       buffer.updatePixels();
       s.image(buffer,0,0,GRID.ACTUAL_W,GRID.ACTUAL_H);
+      s.text(`Live: ${(frames >= MAX_SIM_FRAMES)?`No`:'Yes'}`, 12, (GRID.ACTUAL_H * 0.05)*2);
+      s.text(`Frame Rate: ${s.getFrameRate()}`,  12, GRID.ACTUAL_H * 0.05 );
     }
   }
 }

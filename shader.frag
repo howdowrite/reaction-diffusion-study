@@ -11,6 +11,14 @@ uniform float dB;
 void main() {
   vec2 st = vTexCoord;
   vec2 texel = 1.0 / uResolution; // The size of exactly one pixel
+
+  float hx = texel.x * 0.5, hy = texel.y * 0.5;
+  if (vTexCoord.x <= hx || vTexCoord.x >= 1.0 - hx ||
+      vTexCoord.y <= hy || vTexCoord.y >= 1.0 - hy) {
+    gl_FragColor = texture2D(uTexture, vTexCoord);
+    return;
+  }
+
   if (
       vTexCoord.x <= texel.x ||
       vTexCoord.x >= 1.0 - texel.x ||
@@ -42,8 +50,8 @@ void main() {
 
   // 3. Gray-Scott Equation Formulas
   float reaction = c.r * c.g * c.g; // Amount of A consumed by B
-  float newA = c.r + 1.1 * ((dA * lap.r) - reaction + (feed * (1.0 - c.r)));
-  float newB = c.g + 1.1 * ((dB * lap.g) + reaction - ((kill + feed) * c.g));
+  float newA = c.r + 1.0 * ((dA * lap.r) - reaction + (feed * (1.0 - c.r)));
+  float newB = c.g + 1.0 * ((dB * lap.g) + reaction - ((kill + feed) * c.g));
 
   // 4. Output values clamped to valid 0.0-1.0 ranges back into the texture channel
   gl_FragColor = vec4(clamp(newA, 0.0, 1.0), clamp(newB, 0.0001, 1.0), 0.0, 1.0);

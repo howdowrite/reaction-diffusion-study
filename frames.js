@@ -5,13 +5,13 @@ import {pop_graph} from "./pop_graph.js";
 const default_GRID = {
   SIM_W: 100.00,
   SIM_H: 100.00,
-  ACTUAL_W: 800.00,
-  ACTUAL_H:800.00
+  ACTUAL_W: 300.00,
+  ACTUAL_H: 300.00
 }
 
 const LARGE = {
-  SIM_W: 280.00,
-  SIM_H: 280.00,
+  SIM_W: 880.00,
+  SIM_H: 880.00,
   ACTUAL_W: 800.00,
   ACTUAL_H: 800.00
 }
@@ -63,8 +63,9 @@ const sampleSimulationParameters = {
 //   return originalGetContext.call(this, type, attributes);
 // };
 
-const RD1 = new p5(shader_RD(LARGE, cheetah),"RDFrame");
-const graph = new p5(pop_graph(()=>RD1.getChemATotal(), ()=>RD1.getChemBTotal()),"RDFrame");
+const RD1 = new p5(shader_RD(LARGE, default_SIM_PARAM),"RDFrame");
+            // new p5(RD(LARGE, default_SIM_PARAM),"SHADER_RDFrame");
+// const graph = new p5(pop_graph(()=>RD1.getChemATotal(), ()=>RD1.getChemBTotal()),"RDFrame");
 // const graph = setInterval(()=>{
 //   console.log(~~RD1.getChemATotal(), ~~RD1.getChemBTotal());
 //   if(RD1.hasStopped()) {
@@ -73,4 +74,3 @@ const graph = new p5(pop_graph(()=>RD1.getChemATotal(), ()=>RD1.getChemBTotal())
 //     return;
 //   }
 // }, 1000);
-// new p5(shader_RD(LARGE, sampleSimulationParameters),"SHADER_RDFrame");
