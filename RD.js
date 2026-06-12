@@ -19,7 +19,7 @@ export const RD = (GRID, PARAM) => s => {
 
   //@ts-ignore
   let gridA, gridB, nextA, nextB, buffer;
-  const MAX_SIM_FRAMES = 800;
+  const MAX_SIM_FRAMES = 1200;
 
   s.setup = () => {
     console.log(GRID);
@@ -55,8 +55,8 @@ export const RD = (GRID, PARAM) => s => {
 
   s.draw = () => {
 
-    if(!(frames++ >= MAX_SIM_FRAMES))
-    for(let calc = 0; calc < 80; calc++){
+    if(!(s.frameCount >= MAX_SIM_FRAMES))
+    for(let calc = 0; calc < 8; calc++){
       for(let y = 1; y < GRID.SIM_H - 1; y++){
         const row = y * GRID.SIM_W;
         for(let x = 1; x < GRID.SIM_W - 1; x++){
@@ -99,7 +99,7 @@ export const RD = (GRID, PARAM) => s => {
         for(let x = 1; x<GRID.SIM_W-1; x++){
           const idx = x + row | 0;
           const pix = idx * 4;
-          const v = gridA[idx] ** 2.5
+          const v = gridA[idx]//** 2.5
           buffer.pixels[pix + 0] = ~~(v*255);
           buffer.pixels[pix + 1] = ~~(v*255);
           buffer.pixels[pix + 2] = ~~(v*255);

@@ -42,7 +42,7 @@ export const pop_graph = (...data) => s => {
       for(let i = 0; i < pop_data.length; i++){
         s.stroke(colors[j]);
         let x = s.map(pop_data[i][j].time,0, elapsed, 50, s.width - 20);
-        let y = s.map(pop_data[i][j].value, 0, 78400, s.height - 40, 20);
+        let y = s.map(pop_data[i][j].value, 0, 270400, s.height - 40, 20);
         s.vertex(x, y);
       }
       s.endShape();

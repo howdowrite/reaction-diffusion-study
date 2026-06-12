@@ -12,14 +12,8 @@ void main() {
   vec2 st = vTexCoord;
   vec2 texel = 1.0 / uResolution; // The size of exactly one pixel
 
-  float hx = texel.x * 0.5, hy = texel.y * 0.5;
-  if (vTexCoord.x <= hx || vTexCoord.x >= 1.0 - hx ||
-      vTexCoord.y <= hy || vTexCoord.y >= 1.0 - hy) {
-    gl_FragColor = texture2D(uTexture, vTexCoord);
-    return;
-  }
-
   if (
+
       vTexCoord.x <= texel.x ||
       vTexCoord.x >= 1.0 - texel.x ||
       vTexCoord.y <= texel.y ||
@@ -44,14 +38,20 @@ void main() {
 
   // 2. Laplacian Grid Matrix (Calculates chemical bleeding/diffusion)
   // Red Channel = Chemical A, Green Channel = Chemical B
-  vec2 lap = (c.rg * -1.0) +
-    ((n.rg + e.rg + w.rg + s.rg) * 0.2) +
-    ((ne.rg + nw.rg + se.rg + sw.rg) * 0.05);
+
+  // vec2 lap = (n.rg + s.rg + e.rg + w.rg) * 1.0  + (c.rg * -4.0);
+
+  vec2 neighbors = ((n.rg + e.rg + w.rg + s.rg) * 0.2) + ((ne.rg + nw.rg + se.rg + sw.rg) * 0.05);
+  // binary floating-point numbers cannot perfectly represent 0.2 or 0.05
+
+  vec2 lap = neighbors - c.rg;
+  
 
   // 3. Gray-Scott Equation Formulas
   float reaction = c.r * c.g * c.g; // Amount of A consumed by B
-  float newA = c.r + 1.0 * ((dA * lap.r) - reaction + (feed * (1.0 - c.r)));
-  float newB = c.g + 1.0 * ((dB * lap.g) + reaction - ((kill + feed) * c.g));
+  float dt = 1.0;
+  float newA = c.r + dt * ((dA * lap.r) - reaction + (feed * (1.0 - c.r)));
+  float newB = c.g + dt * ((dB * lap.g) + reaction - ((kill + feed) * c.g));
 
   // 4. Output values clamped to valid 0.0-1.0 ranges back into the texture channel
   gl_FragColor = vec4(clamp(newA, 0.0, 1.0), clamp(newB, 0.0001, 1.0), 0.0, 1.0);
