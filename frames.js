@@ -10,10 +10,10 @@ const default_GRID = {
 }
 
 const LARGE = {
-  SIM_W: 280.00,
-  SIM_H: 280.00,
-  ACTUAL_W: 450.00,
-  ACTUAL_H: 450.00
+  SIM_W: 520.00,
+  SIM_H: 260.00,
+  ACTUAL_W: 1250.00,
+  ACTUAL_H: 850.00
 }
 
 const _1024 = {
@@ -64,8 +64,8 @@ const sampleSimulationParameters = {
 // };
 
 new p5(RD(LARGE, cheetah),"RDFrame");
-const RD1 = new p5(shader_RD(LARGE, cheetah),"SHADER_RDFrame");
-const graph = new p5(pop_graph(()=>RD1.getChemATotal(), ()=>RD1.getChemBTotal()),"RDFrame");
+// const RD1 = new p5(shader_RD(LARGE, cheetah),"SHADER_RDFrame");
+// const graph = new p5(pop_graph(()=>RD1.getChemATotal(), ()=>RD1.getChemBTotal()),"RDFrame");
 // const graph = setInterval(()=>{
 //   console.log(~~RD1.getChemATotal(), ~~RD1.getChemBTotal());
 //   if(RD1.hasStopped()) {

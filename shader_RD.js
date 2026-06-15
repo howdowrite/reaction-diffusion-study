@@ -10,10 +10,11 @@
 export const shader_RD = (GRID, PARAM) => s => {
 
   let totalChemA = 0, totalChemB = 0;
-  const MAX_SIM_FRAMES = 1200;
+  const MAX_SIM_FRAMES = 1800;
   let rdShader;
   let bufferA, bufferB;
   let textLayer;
+  let texelX, texelY;
 
   s.hasStopped = () => (s.frameCount >= MAX_SIM_FRAMES);
   s.getChemATotal = () => totalChemA;
@@ -30,7 +31,7 @@ export const shader_RD = (GRID, PARAM) => s => {
     s.fill(0, 255, 0);       
 
     s.rectMode(s.CORNER); 
-    s.rect(-20, -20, 40, 40); // WebGL (0,0) is dead center
+    s.rect(-20, -20, 30, 30); // WebGL (0,0) is dead center
 
     // s.fill(255, 0, 0);       
     // s.circle(0, 0, 110); // WebGL (0,0) is dead center
@@ -39,16 +40,33 @@ export const shader_RD = (GRID, PARAM) => s => {
 
   s.setup = () => {
     console.log(GRID);
+    s.setAttributes({
+      premultipliedAlpha: false, // STOPS WebGL from multiplying RGB by Alpha
+      alpha: true,
+      antialias: false,
+      preserveDrawingBuffer: true
+    });
+
     let webgl = s.createCanvas(GRID.ACTUAL_W, GRID.ACTUAL_H, s.WEBGL); 
+
     textLayer = s.createGraphics(GRID.ACTUAL_W, GRID.ACTUAL_H);
     s.pixelDensity(1);
     s.frameRate(60)
 
-    let gl = s.drawingContext;
-    console.log(gl)
 
-    bufferA = s.createFramebuffer({ width: GRID.SIM_W, height: GRID.SIM_H, format: s.FLOAT, textureFiltering: s.LINEAR, antialias:false});
-    bufferB = s.createFramebuffer({ width: GRID.SIM_W, height: GRID.SIM_H, format: s.FLOAT, textureFiltering: s.LINEAR, antialias:false});
+
+    texelX = 1.0 / GRID.SIM_W;
+    texelY = 1.0 / GRID.SIM_H;
+
+
+    bufferA = s.createFramebuffer({ width: GRID.SIM_W, height: GRID.SIM_H, format: s.FLOAT, textureFiltering: s.NEAREST, antialias:false});
+    bufferB = s.createFramebuffer({ width: GRID.SIM_W, height: GRID.SIM_H, format: s.FLOAT, textureFiltering: s.NEAREST, antialias:false});
+
+    // Grab the raw WebGL context from your p5 graphics buffer or canvas
+    let gl = bufferA.gl;
+    console.log(gl)
+    // gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+
 
     bufferA.pixelDensity(1);
     bufferB.pixelDensity(1);
@@ -67,22 +85,26 @@ export const shader_RD = (GRID, PARAM) => s => {
 
   s.draw = () => {
     if(!(s.frameCount >= MAX_SIM_FRAMES))
-    for(let calc = 0; calc<12;calc++){
-       bufferA.begin()
-       s.shader(rdShader);
+    for(let calc = 0; calc<42;calc++){
+      bufferA.begin()
+      s.shader(rdShader);
+      rdShader.setUniform('uTexelSize', [texelX, texelY]);
+      rdShader.setUniform('uTexture', bufferB);
+      rdShader.setUniform('uResolution', [GRID.SIM_W, GRID.SIM_H]);
+      rdShader.setUniform('dA', PARAM.dA);
+      rdShader.setUniform('dB', PARAM.dB);
+      rdShader.setUniform('kill', PARAM.killRate);
+      rdShader.setUniform('feed', PARAM.feedRate);
 
-       rdShader.setUniform('uTexture', bufferB);
-       rdShader.setUniform('uResolution', [GRID.SIM_W, GRID.SIM_H]);
-       rdShader.setUniform('dA', PARAM.dA);
-       rdShader.setUniform('dB', PARAM.dB);
-       rdShader.setUniform('kill', PARAM.killRate);
-       rdShader.setUniform('feed', PARAM.feedRate);
+      s.rect(-GRID.SIM_W/2, -GRID.SIM_H/2, GRID.SIM_W, GRID.SIM_H);
+      bufferA.end();
 
-       s.rect(-GRID.SIM_W/2, -GRID.SIM_H/2, GRID.SIM_W, GRID.SIM_H);
-       bufferA.end();
-
-       [bufferA, bufferB] = [bufferB, bufferA];
-     }
+      // [bufferA, bufferB] = [bufferB, bufferA];
+      let temp = bufferA;
+      bufferA = bufferB;
+      bufferB = temp;
+      s.resetShader();
+    }
 
     if(s.frameCount % 2 === 0){
       bufferB.loadPixels();

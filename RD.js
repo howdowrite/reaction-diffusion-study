@@ -20,6 +20,8 @@ export const RD = (GRID, PARAM) => s => {
   //@ts-ignore
   let gridA, gridB, nextA, nextB, buffer;
   const MAX_SIM_FRAMES = 1200;
+  let simTime = 0;
+  let renderTime = 0;
 
   s.setup = () => {
     console.log(GRID);
@@ -54,64 +56,74 @@ export const RD = (GRID, PARAM) => s => {
   };
 
   s.draw = () => {
+    if(!(s.frameCount >= MAX_SIM_FRAMES)){
+      let sim0 = performance.now();
+      for(let calc = 0; calc < 8; calc++){
+        for(let y = 1; y < GRID.SIM_H - 1; y++){
+          const row = y * GRID.SIM_W;
+          for(let x = 1; x < GRID.SIM_W - 1; x++){
+            const idx = x + row | 0;
+            const a = gridA[idx];
+            const b = gridB[idx];
+            const feedTerm = PARAM.feedRate * (1-a);
+            const killTerm = (PARAM.killRate + PARAM.feedRate) * b;
 
-    if(!(s.frameCount >= MAX_SIM_FRAMES))
-    for(let calc = 0; calc < 8; calc++){
-      for(let y = 1; y < GRID.SIM_H - 1; y++){
-        const row = y * GRID.SIM_W;
-        for(let x = 1; x < GRID.SIM_W - 1; x++){
-          const idx = x + row | 0;
-          const a = gridA[idx];
-          const b = gridB[idx];
-          const feedTerm = PARAM.feedRate * (1-a);
-          const killTerm = (PARAM.killRate + PARAM.feedRate) * b;
+            const top = idx - GRID.SIM_W;
+            const bottom = idx + GRID.SIM_W;
 
-          const top = idx - GRID.SIM_W;
-          const bottom = idx + GRID.SIM_W;
+            const laplaceA =
+              Math.fround((gridA[idx] * -1) +
+                ((gridA[top - 1] + gridA[top + 1] + gridA[bottom - 1] + gridA[bottom + 1]) * 0.05) +
+                ((gridA[top] + gridA[bottom] + gridA[idx - 1] + gridA[idx+1]) * 0.2));
 
-          const laplaceA =
-            (gridA[idx] * -1) +
-            ((gridA[top - 1] + gridA[top + 1] + gridA[bottom - 1] + gridA[bottom + 1]) * 0.05) +
-            ((gridA[top] + gridA[bottom] + gridA[idx - 1] + gridA[idx+1]) * 0.2);
+            const laplaceB =
+              Math.fround((gridB[idx] * -1) +
+                ((gridB[top - 1] + gridB[top + 1] + gridB[bottom - 1] + gridB[bottom + 1]) * 0.05) +
+                ((gridB[top] + gridB[bottom] + gridB[idx - 1] + gridB[idx+1]) * 0.2));
 
-          const laplaceB =
-            (gridB[idx] * -1) +
-            ((gridB[top - 1] + gridB[top + 1] + gridB[bottom - 1] + gridB[bottom + 1]) * 0.05) +
-            ((gridB[top] + gridB[bottom] + gridB[idx - 1] + gridB[idx+1]) * 0.2);
+            const abb = Math.fround(a * b* b);
+            const dt = 1;
+            const newA = Math.fround(a + dt * ((PARAM.dA * laplaceA) - abb + feedTerm));
+            const newB = Math.fround(b + dt * ((PARAM.dB * laplaceB) + abb - killTerm));
 
-          const abb = a * b* b;
-          const dt = 1;
-          const newA = a + dt * ((PARAM.dA * laplaceA) - abb + feedTerm);
-          const newB = b + dt * ((PARAM.dB * laplaceB) + abb - killTerm);
-
-          nextA[idx] = Math.min(1, Math.max(0,newA));
-          nextB[idx] = Math.min(1, Math.max(0.0001,newB));
+            nextA[idx] = Math.min(1, Math.max(0,newA));
+            nextB[idx] = Math.min(1, Math.max(0.0001,newB));
+          }
         }
+        [nextA,gridA] = [gridA, nextA];
+        [nextB,gridB] = [gridB, nextB];
+        let sim1 = performance.now();
+        simTime = simTime * 0.95 + (sim1 - sim0) * 0.05;
       }
-      [nextA,gridA] = [gridA, nextA];
-      [nextB,gridB] = [gridB, nextB];
-    }
 
-    if(s.frameCount % 2 === 0){
-      buffer.loadPixels();
-      for(let y = 1; y<GRID.SIM_H-1; y++){
-        const row = (y*GRID.SIM_W)
-        for(let x = 1; x<GRID.SIM_W-1; x++){
-          const idx = x + row | 0;
-          const pix = idx * 4;
-          const v = gridA[idx]//** 2.5
-          buffer.pixels[pix + 0] = ~~(v*255);
-          buffer.pixels[pix + 1] = ~~(v*255);
-          buffer.pixels[pix + 2] = ~~(v*255);
-          buffer.pixels[pix + 3] = 255;
+      if(s.frameCount % 1 === 0){
+        let render0 = performance.now();
+        buffer.loadPixels();
+        for(let y = 1; y<GRID.SIM_H-1; y++){
+          const row = (y*GRID.SIM_W)
+          for(let x = 1; x<GRID.SIM_W-1; x++){
+            const idx = x + row | 0;
+            const pix = idx * 4;
+            const v = gridA[idx]//** 2.5
+            buffer.pixels[pix + 0] = ~~(v*255);
+            buffer.pixels[pix + 1] = ~~(v*255);
+            buffer.pixels[pix + 2] = ~~(v*255);
+            buffer.pixels[pix + 3] = 255;
+          }
+        }
+
+        buffer.updatePixels();
+        let render1 = performance.now();
+        renderTime = renderTime * 0.95 + (render1 - render0) * 0.05;
+
+        s.textSize(GRID.ACTUAL_H * 0.05);
+        s.fill(0)
+        s.image(buffer,0,0,GRID.ACTUAL_W,GRID.ACTUAL_H);
+        s.text(`Frame Rate: ${s.getFrameRate()}`,  12, GRID.ACTUAL_H * 0.05 );
+        s.text(`Live: ${(frames >= MAX_SIM_FRAMES)?`No`:'Yes'}`, 12, (GRID.ACTUAL_H * 0.05)*2);
+        s.text(`SIM: ${simTime.toFixed(2)} ms`, 12, (GRID.ACTUAL_H * 0.05)*3);
+        s.text(`Render: ${renderTime.toFixed(2)} ms`, 12, (GRID.ACTUAL_H * 0.05)*4);
       }
-    }
-      s.textSize(GRID.ACTUAL_H * 0.05);
-      s.fill(0)
-      buffer.updatePixels();
-      s.image(buffer,0,0,GRID.ACTUAL_W,GRID.ACTUAL_H);
-      s.text(`Live: ${(frames >= MAX_SIM_FRAMES)?`No`:'Yes'}`, 12, (GRID.ACTUAL_H * 0.05)*2);
-      s.text(`Frame Rate: ${s.getFrameRate()}`,  12, GRID.ACTUAL_H * 0.05 );
     }
   }
 }
