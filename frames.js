@@ -10,9 +10,9 @@ const default_GRID = {
 }
 
 const LARGE = {
-  SIM_W: 520.00,
-  SIM_H: 260.00,
-  ACTUAL_W: 1250.00,
+  SIM_W: 480.00,
+  SIM_H: 480.00,
+  ACTUAL_W: 850.00,
   ACTUAL_H: 850.00
 }
 
@@ -43,8 +43,8 @@ const default_SIM_PARAM = {
 const cheetah = {
   dA : 0.9,
   dB : 0.3,
-  feedRate: 0.029 - 0.02,
-  killRate: 0.065 - 0.02,
+  feedRate: 0.029, //-2
+  killRate: 0.065, //-2
 }
 
 const sampleSimulationParameters = {
