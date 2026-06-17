@@ -9,12 +9,15 @@
 //@ts-ignore
 export const shader_RD = (GRID, PARAM) => s => {
 
-  let totalChemA = 0, totalChemB = 0;
+  let totalChemA = 0, totalChemB = 0, diffA = 0, diffB = 0;
   const MAX_SIM_FRAMES = 1800;
   let rdShader;
   let bufferA, bufferB;
   let textLayer;
   let texelX, texelY;
+  let frameRate = 0;
+  let simulationSpeed = 0;
+  let renderSpeed = 0;
 
   s.hasStopped = () => (s.frameCount >= MAX_SIM_FRAMES);
   s.getChemATotal = () => totalChemA;
@@ -52,8 +55,7 @@ export const shader_RD = (GRID, PARAM) => s => {
     textLayer = s.createGraphics(GRID.ACTUAL_W, GRID.ACTUAL_H);
     s.pixelDensity(1);
     s.frameRate(60)
-
-
+    frameRate = s.getFrameRate();
 
     texelX = 1.0 / GRID.SIM_W;
     texelY = 1.0 / GRID.SIM_H;
@@ -84,8 +86,10 @@ export const shader_RD = (GRID, PARAM) => s => {
 
 
   s.draw = () => {
+    let s0 = performance.now();
+
     if(!(s.frameCount >= MAX_SIM_FRAMES))
-    for(let calc = 0; calc<42;calc++){
+    for(let calc = 0; calc<24;calc++){
       bufferA.begin()
       s.shader(rdShader);
       rdShader.setUniform('uTexelSize', [texelX, texelY]);
@@ -105,23 +109,49 @@ export const shader_RD = (GRID, PARAM) => s => {
       bufferB = temp;
       s.resetShader();
     }
+    let s1 = performance.now();
+    simulationSpeed = (simulationSpeed * 0.95) + (s1-s0) * 0.05;
 
-    if(s.frameCount % 2 === 0){
-      bufferB.loadPixels();
-      totalChemA = totalChemB = 0
-      for(let i = 0; i < bufferB.pixels.length;  i+=4){
-        totalChemA += bufferB.pixels[i];
-        totalChemB += bufferB.pixels[i+1];
+    if(s.frameCount % 2 === 0 ){
+      let r0 = performance.now();
+
+      if(!(s.frameCount >= MAX_SIM_FRAMES))
+      if(s.frameCount % 15 === 0){
+        bufferB.loadPixels();
+        diffA = totalChemA;
+        diffB = totalChemB;
+        totalChemA = totalChemB = 0
+
+        for(let i = 0; i < bufferB.pixels.length;  i+=4){
+          totalChemA += bufferB.pixels[i];
+          totalChemB += bufferB.pixels[i+1];
+        }
+
+        diffA = (totalChemA - diffA);
+        diffB = (totalChemB - diffB);
+
+        // diffA = s.abs(diffA) <= 1.0 ? 0: diffA;
+        // diffB = s.abs(diffB) <= 1.0 ? 0: diffB;
+        //
       }
-      // console.log(totalChemA , totalChemB);
+
+
       const final = bufferB;
+      let r1 = performance.now();
+      renderSpeed = (renderSpeed * 0.95) + (r1-r0) * 0.05;
+
+      frameRate = (frameRate * 0.95) + (s.getFrameRate() * 0.05);
 
       textLayer.clear();
       textLayer.textFont();
       textLayer.textSize(GRID.ACTUAL_H * 0.05);
       textLayer.fill(0)
-      textLayer.text(`Frame Rate: ${s.getFrameRate()}`,  12, GRID.ACTUAL_H * 0.05 );
-      textLayer.text(`Live: ${(frames >= MAX_SIM_FRAMES)?`No`:'Yes'}`, 12, (GRID.ACTUAL_H * 0.05)*2);
+      textLayer.text(`Frame Rate: ${frameRate.toFixed(2)}`,  12, GRID.ACTUAL_H * 0.05 );
+      textLayer.text(`Live: ${(s.frameCount >= MAX_SIM_FRAMES)?`No`:'Yes'}`, 12, (GRID.ACTUAL_H * 0.05)*2);
+      textLayer.text(`SIM: ${simulationSpeed.toFixed(2)} ms`, 12, (GRID.ACTUAL_H * 0.05)*3);
+      textLayer.text(`RENDER: ${renderSpeed.toFixed(2)} ms`, 12, (GRID.ACTUAL_H * 0.05)*4);
+      textLayer.text(`A Population: ${totalChemA.toFixed(2)} ${diffA.toFixed(2)}`, 12, (GRID.ACTUAL_H * 0.05)*5);
+      textLayer.text(`B Population: ${totalChemB.toFixed(2)} ${diffB.toFixed(2)}`, 12, (GRID.ACTUAL_H * 0.05)*6);
       s.background(0);
 
       s.image(final, -GRID.ACTUAL_W/2, -GRID.ACTUAL_H/2, GRID.ACTUAL_W, GRID.ACTUAL_H);

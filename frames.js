@@ -63,8 +63,8 @@ const sampleSimulationParameters = {
 //   return originalGetContext.call(this, type, attributes);
 // };
 
-new p5(RD(LARGE, cheetah),"RDFrame");
-// const RD1 = new p5(shader_RD(LARGE, cheetah),"SHADER_RDFrame");
+// new p5(RD(LARGE, default_SIM_PARAM),"RDFrame");
+const RD1 = new p5(shader_RD(LARGE, cheetah),"SHADER_RDFrame");
 // const graph = new p5(pop_graph(()=>RD1.getChemATotal(), ()=>RD1.getChemBTotal()),"RDFrame");
 // const graph = setInterval(()=>{
 //   console.log(~~RD1.getChemATotal(), ~~RD1.getChemBTotal());

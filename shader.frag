@@ -63,7 +63,8 @@ void main() {
 
   // 3. Gray-Scott Equation Formulas
   float reaction = c.r * c.g * c.g; // Amount of A consumed by B
-  float dt = 0.5;
+  // reaction = floor(reaction * 4096.00)/4096.00;
+  float dt = 1.0;
   float newA = c.r + dt * ((dA * lap.r) - reaction + (feed * (1.0 - c.r)));
   float newB = c.g + dt * ((dB * lap.g) + reaction - ((kill + feed) * c.g));
 
@@ -71,6 +72,9 @@ void main() {
   // This prevents the float registers from breaking over infinitely tiny numbers
   if (newA < 1e-6) newA = 0.0;
   if (newB < 0.0001) newB = 0.0001;
+
+  newA = round(newA * 16384.00)/16384.00;
+  newB = round(newB * 16384.00)/16384.00;
 
   // 4. Output values clamped to valid 0.0-1.0 ranges back into the texture channel
   fragColor = vec4(clamp(newA, 0.0, 1.0), clamp(newB, 0.0001, 1.0), 0.0, 1.0);
